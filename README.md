@@ -1,318 +1,138 @@
 # LongCat-Video
 
-<div align="center">
-  <img src="assets/longcat-video_logo.svg" width="45%" alt="LongCat-Video" />
-</div>
-<hr>
+美团开源的基础视频生成模型，支持文生视频、图生视频、视频续写及音频驱动数字人视频生成，参数规模 13.6B。
 
+## 功能特性
 
-<div align="center" style="line-height: 1;">
-  <img src='assets/longcat_video_title.svg' alt="LongCat-Video">
-  <a href='https://meituan-longcat.github.io/LongCat-Video/'><img src='https://img.shields.io/badge/Project-Page-green'></a>
-  <a href='https://arxiv.org/abs/2510.22200'><img src='https://img.shields.io/badge/Technique-Report-red'></a>
-  <a href='https://huggingface.co/meituan-longcat/LongCat-Video'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-blue'></a>
-</div>
-<div align="center" style="line-height: 1;">
-  <img src='assets/longcat_video_avatar_1.5_title.svg' alt="LongCat-Video-Avatar 1.5">
-  <a href='https://meigen-ai.github.io/LongCat-Video-Avatar-1.5-Page/'><img src='https://img.shields.io/badge/Project-Page-green'></a>
-  <a href='https://github.com/meituan-longcat/LongCat-Video/blob/main/assets/LongCat-Video-Avatar-1.5-Tech-Report.pdf'><img src='https://img.shields.io/badge/Technique-Report-red'></a>
-  <a href='https://huggingface.co/meituan-longcat/LongCat-Video-Avatar-1.5'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-blue'></a>
-  <a href='https://www.modelscope.cn/models/meituan-longcat/LongCat-Video-Avatar-1.5'><img src='https://img.shields.io/badge/ModelScope-Model-purple'></a>
-</div>
-<div align="center" style="line-height: 1;">
-  <img src='assets/title_placeholder.svg' alt="placeholder">
-  </a>
-  <a href='https://github.com/meituan-longcat/LongCat-Flash-Chat/blob/main/figures/wechat_official_accounts.png'><img src='https://img.shields.io/badge/WeChat-LongCat-brightgreen?logo=wechat&logoColor=white'></a>  
-  <a href='https://x.com/Meituan_LongCat'><img src='https://img.shields.io/badge/Twitter-LongCat-white?logo=x&logoColor=white'></a>
-<a href="https://discord.gg/EXsG52D8SW"><img src="https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white"></a>
-  <a href='LICENSE'><img src='https://img.shields.io/badge/License-MIT-f5de53?&color=f5de53'></a>
-</div>
+- **多任务统一架构**：单一模型同时支持文生视频（Text-to-Video）、图生视频（Image-to-Video）和视频续写（Video-Continuation）
+- **长视频生成**：原生预训练支持视频续写，可生成数分钟长视频，无色彩漂移或质量下降
+- **高效推理**：采用粗到细生成策略 + 块稀疏注意力（Block Sparse Attention），分钟级生成 720p/30fps 视频
+- **多奖励 RLHF 优化**：基于多奖励 GRPO 策略优化，性能对标主流开源及商业方案
+- **数字人视频生成（Avatar）**：音频驱动角色动画，支持单人/多人音频输入，兼容动画风格泛化
+- **Avatar 1.5 升级**：Whisper-Large 音频编码器实现更精准唇同步，步骤蒸馏加速推理（8 步），支持 INT8 量化
 
-## Model Introduction
-We introduce LongCat-Video, a foundational video generation model with 13.6B parameters, delivering strong performance across *Text-to-Video*, *Image-to-Video*, and *Video-Continuation* generation tasks. It particularly excels in efficient and high-quality long video generation, representing our first step toward world models.
+## 技术栈
 
-### Key Features
-- 🌟 **Unified architecture for multiple tasks**: LongCat-Video unifies *Text-to-Video*, *Image-to-Video*, and *Video-Continuation* tasks within a single video generation framework. It natively supports all these tasks with a single model and consistently delivers strong performance across each individual task.
-- 🌟 **Long video generation**: LongCat-Video is natively pretrained on *Video-Continuation* tasks, enabling it to produce minutes-long videos without color drifting or quality degradation.
-- 🌟 **Efficient inference**: LongCat-Video generates $720p$, $30fps$ videos within minutes by employing a coarse-to-fine generation strategy along both the temporal and spatial axes. Block Sparse Attention further enhances efficiency, particularly at high resolutions
-- 🌟 **Strong performance with multi-reward RLHF**: Powered by multi-reward Group Relative Policy Optimization (GRPO), comprehensive evaluations on both internal and public benchmarks demonstrate that LongCat-Video achieves performance comparable to leading open-source video generation models as well as the latest commercial solutions.
+- **框架**：PyTorch 2.6、Diffusers、Transformers
+- **注意力加速**：FlashAttention-2（默认）/ FlashAttention-3 / xFormers
+- **音频处理**：Wav2Vec2（v1.0）、Whisper-Large-v3（v1.5）、librosa
+- **推理优化**：Context Parallel 多卡并行、torch.compile、INT8 量化
+- **交互界面**：Streamlit
 
-For more detail, please refer to the comprehensive [***LongCat-Video Technical Report***](https://arxiv.org/abs/2510.22200).
+## 快速开始
 
-## 🎥 Teaser Video
-
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/00fa63f0-9c4e-461a-a79e-c662ad596d7d" width="2264" height="384"> </video>
-</div>
-
-## 🔥 Latest News!!
-- May 21, 2026: 🚀 We release [***LongCat-Video-Avatar-1.5***](https://meigen-ai.github.io/LongCat-Video-Avatar-1.5-Page/), an upgraded open-source framework for audio-driven human video generation. v1.5 replaces Wav2Vec2 with Whisper-Large for more accurate lip synchronization, achieves production-ready physical rationality and temporal stability with robust long-video generation, generalizes to stylized domains (anime, animals, complex real-world conditions), supports both single-stream and multi-stream audio inputs, and accelerates inference to 8 steps via step distillation. [ [***code***](https://github.com/meituan-longcat/LongCat-Video) | 🤗 [***weights***](https://huggingface.co/meituan-longcat/LongCat-Video-Avatar-1.5) | [***project page***](https://meigen-ai.github.io/LongCat-Video-Avatar-1.5-Page/) ]
-- Dec 16, 2025: 🚀 We are excited to announce the release of [***LongCat-Video-Avatar***](https://meigen-ai.github.io/LongCat-Video-Avatar/), a unified model that delivers expressive and highly dynamic audio-driven character animation, supporting native tasks including *Audio-Text-to-Video*, *Audio-Text-Image-to-Video*, and *Video Continuation* with seamless compatibility for both *single-stream* and *multi-stream* audio inputs. The release includes our [***Technical Report***](https://github.com/meituan-longcat/LongCat-Video), [***inference code***](https://github.com/meituan-longcat/LongCat-Video), 🤗 [***model weights***](https://huggingface.co/meituan-longcat/LongCat-Video-Avatar), and [***project page***](https://meigen-ai.github.io/LongCat-Video-Avatar/).
-- Oct 25, 2025: 🚀 We've released LongCat-Video, a foundational video generation model.  Tech report and models are available at [***LongCat-Video Technical Report***](https://arxiv.org/abs/2510.22200) and 🤗 [***Huggingface***](https://huggingface.co/meituan-longcat/LongCat-Video) !
-
-
-
-## Quick Start
-
-### Installation
-
-Clone the repo:
+### 安装
 
 ```shell
 git clone --single-branch --branch main https://github.com/meituan-longcat/LongCat-Video
 cd LongCat-Video
-```
 
-Install dependencies:
-
-```shell
-# create conda environment
+# 创建 conda 环境
 conda create -n longcat-video python=3.10
 conda activate longcat-video
 
-# install torch (configure according to your CUDA version)
+# 安装 PyTorch（根据 CUDA 版本调整）
 pip install torch==2.6.0+cu124 torchvision==0.21.0+cu124 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 
-# install flash-attn-2
-pip install ninja 
-pip install psutil 
-pip install packaging 
+# 安装 FlashAttention-2
+pip install ninja psutil packaging
 pip install flash_attn==2.7.4.post1
 
-# install other requirements
+# 安装其他依赖
 pip install -r requirements.txt
 
-# install longcat-video-avatar requirements
-conda install -c conda-forge librosa
-conda install -c conda-forge ffmpeg
+# 安装 Avatar 相关依赖
+conda install -c conda-forge librosa ffmpeg
 pip install -r requirements_avatar.txt
-
 ```
 
-FlashAttention-2 is enabled in the model config by default; you can also change the model config ("./weights/LongCat-Video/dit/config.json") to use FlashAttention-3 or xformers once installed.
+### 下载模型
 
-### Model Download
-
-| Models | Description | Download Link |
-| --- | --- | --- |
-| LongCat-Video | foundational video generation | 🤗 [Huggingface](https://huggingface.co/meituan-longcat/LongCat-Video) |
-| LongCat-Video-Avatar | single- and multi-character audio-driven video generation (wav2vec2) | 🤗 [Huggingface](https://huggingface.co/meituan-longcat/LongCat-Video-Avatar) |
-| LongCat-Video-Avatar-1.5 | upgraded avatar model with Whisper-large-v3 audio encoder, distillation-based fast inference | 🤗 [Huggingface](https://huggingface.co/meituan-longcat/LongCat-Video-Avatar-1.5) |
-
-Download models using huggingface-cli:
 ```shell
 pip install "huggingface_hub[cli]"
+
+# 基础视频生成模型
 huggingface-cli download meituan-longcat/LongCat-Video --local-dir ./weights/LongCat-Video
+
+# 数字人模型 v1.0
 huggingface-cli download meituan-longcat/LongCat-Video-Avatar --local-dir ./weights/LongCat-Video-Avatar
+
+# 数字人模型 v1.5（推荐）
 huggingface-cli download meituan-longcat/LongCat-Video-Avatar-1.5 --local-dir ./weights/LongCat-Video-Avatar-1.5
 ```
 
-### Run Text-to-Video
+### 运行示例
 
+**文生视频：**
 ```shell
-# Single-GPU inference
+# 单卡推理
 torchrun run_demo_text_to_video.py --checkpoint_dir=./weights/LongCat-Video --enable_compile
 
-# Multi-GPU inference
+# 多卡推理
 torchrun --nproc_per_node=2 run_demo_text_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video --enable_compile
 ```
 
-### Run Image-to-Video
-
+**图生视频：**
 ```shell
-# Single-GPU inference
 torchrun run_demo_image_to_video.py --checkpoint_dir=./weights/LongCat-Video --enable_compile
-
-# Multi-GPU inference
-torchrun --nproc_per_node=2 run_demo_image_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video --enable_compile
 ```
 
-### Run Video-Continuation
-
+**视频续写：**
 ```shell
-# Single-GPU inference
 torchrun run_demo_video_continuation.py --checkpoint_dir=./weights/LongCat-Video --enable_compile
-
-# Multi-GPU inference
-torchrun --nproc_per_node=2 run_demo_video_continuation.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video --enable_compile
 ```
 
-### Run Long-Video Generation
-
+**长视频生成：**
 ```shell
-# Single-GPU inference
 torchrun run_demo_long_video.py --checkpoint_dir=./weights/LongCat-Video --enable_compile
-
-# Multi-GPU inference
-torchrun --nproc_per_node=2 run_demo_long_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video --enable_compile
 ```
 
-### Run Interactive Video Generation
-
+**数字人视频（Avatar 1.5）：**
 ```shell
-# Single-GPU inference
-torchrun run_demo_interactive_video.py --checkpoint_dir=./weights/LongCat-Video --enable_compile
+# 单人音频驱动
+torchrun --nproc_per_node=2 run_demo_avatar_single_audio_to_video.py \
+  --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 \
+  --stage_1=at2v --input_json=assets/avatar/single_example_1.json \
+  --use_distill --model_type avatar-v1.5 --use_int8
 
-# Multi-GPU inference
-torchrun --nproc_per_node=2 run_demo_interactive_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video --enable_compile
+# 多人音频驱动
+torchrun --nproc_per_node=2 run_demo_avatar_multi_audio_to_video.py \
+  --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 \
+  --input_json=assets/avatar/multi_example_1.json \
+  --use_distill --model_type avatar-v1.5 --use_int8
 ```
 
-### Run LongCat-Video-Avatar
-<details>
-<summary>💡 User tips for 1.5</summary>
-
-> - **Lip synchronization accuracy:** Audio CFG works optimally between 3–5. Increase the audio CFG value for better synchronization.
-> - **Prompt Enhancement:** Longer, more descriptive prompts yield better consistency and naturalness than short ones. We recommend including rich details such as character appearance, actions, and scene context (e.g., *"A young woman with long black hair is speaking and smiling, wearing a white blouse, sitting in a bright café"*) for best results.
-> - **Mitigate repeated actions:** Setting the reference image index（--ref_img_index, default to 10） between 0 and 24 ensures better consistency; setting it to 30 helps reduce repeated actions. Additionally, increasing the mask frame range (--mask_frame_range, default to 3) can further help mitigate repeated actions, but excessively large values may introduce artifacts.
-> - **Super resolution:** Our model is compatible with both 480P and 720P, which can be controlled via --resolution.
-> - **Dual-Audio Modes:** Merge mode (set audio_type to para) requires two audio clips of equal length, and the resulting audio is obtained by summing the two clips; Concatenation mode (set audio_type to add) does not require equal-length inputs, and the resulting audio is formed by sequentially concatenating the two clips with silence padding for any gaps, where by default person1 speaks first and person2 speaks afterward.
-> - **Model versions:** `--model_type avatar-v1.0` uses wav2vec2 audio encoder (default); `--model_type avatar-v1.5` uses Whisper-large-v3 audio encoder for better lip sync quality.
-> - **Distillation mode:** Add `--use_distill` to enable distillation sampling (fewer steps, faster inference). This is **required** when using `--model_type avatar-v1.5`.
-> - **INT8 quantization:** Add `--use_int8` to load the INT8 quantized DiT model for reduced VRAM usage. Only supported with `--model_type avatar-v1.5`.
-
-</details>
-
-<details>
-<summary>💡 User tips for 1.0</summary>
-
-> - Lip synchronization accuracy:​​ Audio CFG works optimally between 3–5. Increase the audio CFG value for better synchronization.
-> - Prompt Enhancement: Include clear verbal-action cues (e.g., talking, speaking) in the prompt to achieve more natural lip movements.
-> - Mitigate repeated actions: Setting the reference image index（--ref_img_index, default to 10） between 0 and 24 ensures better consistency, while selecting other ranges (e.g., -10 or 30) helps reduce repeated actions. Additionally, increasing the mask frame range (--mask_frame_range, default to 3) can further help mitigate repeated actions, but excessively large values may introduce artifacts.
-> - Super resolution: Our model is compatible with both 480P and 720P, which can be controlled via --resolution.
-> - Dual-Audio Modes: Merge mode (set audio_type to para) requires two audio clips of equal length, and the resulting audio is obtained by summing the two clips; Concatenation mode (set audio_type to add) does not require equal-length inputs, and the resulting audio is formed by sequentially concatenating the two clips with silence padding for any gaps, where by default person1 speaks first and person2 speaks afterward.
-
-</details>
-
-#### LongCat-Video-Avatar-1.5
-
-- Single-Audio-to-Video Generation
+**Streamlit 交互界面：**
 ```shell
-# Audio-Text-to-Video
-torchrun --nproc_per_node=2 run_demo_avatar_single_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --stage_1=at2v --input_json=assets/avatar/single_example_1.json --use_distill --model_type avatar-v1.5 --use_int8
-
-# Audio-Image-to-Video
-torchrun --nproc_per_node=2 run_demo_avatar_single_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --stage_1=ai2v --input_json=assets/avatar/single_example_1.json --use_distill --model_type avatar-v1.5 --use_int8
-
-# Audio-Text-to-Video and Video-Continuation
-torchrun --nproc_per_node=2 run_demo_avatar_single_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --stage_1=at2v --input_json=assets/avatar/single_example_1.json --num_segments=5 --ref_img_index=10 --mask_frame_range=3 --use_distill --model_type avatar-v1.5 --use_int8
-
-# Audio-Image-to-Video and Video-Continuation
-torchrun --nproc_per_node=2 run_demo_avatar_single_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --stage_1=ai2v --input_json=assets/avatar/single_example_1.json --num_segments=5 --ref_img_index=10 --mask_frame_range=3 --use_distill --model_type avatar-v1.5 --use_int8
-```
-
-- Multi-Audio-to-Video Generation
-```shell
-# Audio-Image-to-Video
-torchrun --nproc_per_node=2 run_demo_avatar_multi_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --input_json=assets/avatar/multi_example_1.json --use_distill --model_type avatar-v1.5 --use_int8
-
-# Audio-Image-to-Video and Video-Continuation
-torchrun --nproc_per_node=2 run_demo_avatar_multi_audio_to_video.py --context_parallel_size=2 --checkpoint_dir=./weights/LongCat-Video-Avatar-1.5 --input_json=assets/avatar/multi_example_1.json --num_segments=5 --ref_img_index=10 --mask_frame_range=3 --use_distill --model_type avatar-v1.5 --use_int8
-```
-
-### Run Streamlit
-
-```shell
-# Single-GPU inference
 streamlit run ./run_streamlit.py --server.fileWatcherType none --server.headless=false
 ```
 
-
-
-## Evaluation Results
-
-### Text-to-Video
-The *Text-to-Video* MOS evaluation results on our internal benchmark.
-
-| **MOS score** | **Veo3** | **PixVerse-V5** | **Wan 2.2-T2V-A14B** | **LongCat-Video** |
-|---------------|-------------------|--------------------|-------------|-------------|
-| **Accessibility** | Proprietary | Proprietary | Open Source | Open Source |
-| **Architecture** | - | - | MoE | Dense |
-| **# Total Params** | - | - | 28B | 13.6B |
-| **# Activated Params** | - | - | 14B | 13.6B |
-| Text-Alignment↑ | 3.99 | 3.81 | 3.70 | 3.76 |
-| Visual Quality↑ | 3.23 | 3.13 | 3.26 | 3.25 |
-| Motion Quality↑ | 3.86 | 3.81 | 3.78 | 3.74 |
-| Overall Quality↑ | 3.48 | 3.36 | 3.35 | 3.38 |
-
-### Image-to-Video
-The *Image-to-Video* MOS evaluation results on our internal benchmark.
-
-| **MOS score** | **Seedance 1.0** | **Hailuo-02** | **Wan 2.2-I2V-A14B** | **LongCat-Video** |
-|---------------|-------------------|--------------------|-------------|-------------|
-| **Accessibility** | Proprietary | Proprietary | Open Source | Open Source |
-| **Architecture** | - | - | MoE | Dense |
-| **# Total Params** | - | - | 28B | 13.6B |
-| **# Activated Params** | - | - | 14B | 13.6B |
-| Image-Alignment↑ | 4.12 | 4.18 | 4.18 | 4.04 |
-| Text-Alignment↑ | 3.70 | 3.85 | 3.33 | 3.49 |
-| Visual Quality↑ | 3.22 | 3.18 | 3.23 | 3.27 |
-| Motion Quality↑ | 3.77 | 3.80 | 3.79 | 3.59 |
-| Overall Quality↑ | 3.35 | 3.27 | 3.26 | 3.17 |
-
-## Community Works
-
-Community works are welcome! Please PR or inform us in Issue to add your work.
-
-- [CacheDiT](https://github.com/vipshop/cache-dit) offers Fully Cache Acceleration support for LongCat-Video with DBCache and TaylorSeer, achieved nearly 1.7x speedup without obvious loss of precision. Visit their [example](https://github.com/vipshop/cache-dit/blob/main/examples/pipeline/run_longcat_video.py) for more details.
-
-
-## License Agreement
-
-The **model weights** are released under the **MIT License**. 
-
-Any contributions to this repository are licensed under the MIT License, unless otherwise stated. This license does not grant any rights to use Meituan trademarks or patents. 
-
-See the [LICENSE](LICENSE) file for the full license text.
-
-
-## Usage Considerations 
-This model has not been specifically designed or comprehensively evaluated for every possible downstream application. 
-
-Developers should take into account the known limitations of large language models, including performance variations across different languages, and carefully assess accuracy, safety, and fairness before deploying the model in sensitive or high-risk scenarios. 
-It is the responsibility of developers and downstream users to understand and comply with all applicable laws and regulations relevant to their use case, including but not limited to data protection, privacy, and content safety requirements. 
-
-Nothing in this Model Card should be interpreted as altering or restricting the terms of the MIT License under which the model is released. 
-
-## Citation
-We kindly encourage citation of our work if you find it useful.
+## 项目结构
 
 ```
-@misc{meituanlongcatteam2025longcatvideotechnicalreport,
-      title={LongCat-Video Technical Report}, 
-      author={Meituan LongCat Team and Xunliang Cai and Qilong Huang and Zhuoliang Kang and Hongyu Li and Shijun Liang and Liya Ma and Siyu Ren and Xiaoming Wei and Rixu Xie and Tong Zhang},
-      year={2025},
-      eprint={2510.22200},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2510.22200}, 
-}
-
-@misc{meituanlongcatteam2026longcatvideoavatar15technicalreport,
-      title={LongCat-Video-Avatar 1.5 Technical Report}, 
-      author={Meituan LongCat Team and Xunliang Cai and Meng Cheng and Feng Gao and Zhe Kong and Jiamu Li and Le Li and Weiheng Li and Hongyu Liu and Shuai Tan and Xiaoming Wei and Tianyu Yang and Yong Zhang},
-      year={2026},
-      eprint={2605.26486},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2605.26486}, 
-}
-
-@misc{meituanlongcatteam2025longcatvideoavatartechnicalreport,
-      title={LongCat-Video-Avatar Technical Report}, 
-      author={Meituan LongCat Team},
-      year={2025},
-      eprint={},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={}, 
-}
+LongCat-Video/
+├── longcat_video/                  # 核心模块
+│   ├── modules/                    # 模型组件（DiT、注意力、LoRA、量化等）
+│   │   └── avatar/                 # Avatar 专用模块
+│   ├── pipeline_longcat_video.py   # 基础视频生成管线
+│   ├── pipeline_longcat_video_avatar.py  # Avatar 视频生成管线
+│   ├── audio_process/              # 音频处理（Wav2Vec2 等）
+│   ├── block_sparse_attention/     # 块稀疏注意力实现
+│   ├── context_parallel/           # 上下文并行推理
+│   └── utils/                      # 工具函数（分桶配置、提示词增强）
+├── run_demo_text_to_video.py       # 文生视频入口
+├── run_demo_image_to_video.py      # 图生视频入口
+├── run_demo_video_continuation.py  # 视频续写入口
+├── run_demo_long_video.py          # 长视频生成入口
+├── run_demo_interactive_video.py   # 交互式视频生成入口
+├── run_demo_avatar_single_audio_to_video.py  # 单人数字人入口
+├── run_demo_avatar_multi_audio_to_video.py   # 多人数字人入口
+├── run_streamlit.py                # Streamlit Web 界面
+├── assets/                         # 示例素材和技术报告
+├── requirements.txt                # 基础依赖
+└── requirements_avatar.txt         # Avatar 额外依赖
 ```
 
-## Acknowledgements
+## 许可证
 
-We would like to thank the contributors to the [Wan](https://huggingface.co/Wan-AI), [UMT5-XXL](https://huggingface.co/google/umt5-xxl), [Diffusers](https://github.com/huggingface/diffusers) and [HuggingFace](https://huggingface.co) repositories, for their open research.
-
-
-## Contact
-Please contact us at <a href="mailto:longcat-team@meituan.com">longcat-team@meituan.com</a> or scan the QR code to join our WeChat Group if you have any questions.  
-<img src="https://raw.githubusercontent.com/meituan-longcat/LongCat-Flash-Chat/main/wechat-assets/Wechat.png" width="200px">
+模型权重及代码采用 MIT 许可证发布。
